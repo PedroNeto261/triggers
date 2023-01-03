@@ -1,0 +1,120 @@
+//----------- Trigger Lead 1 ------------//
+trigger LeadAtv on Lead (before update){ 
+     for(Lead lead : trigger.new){ 
+        if(lead.Phone == null || lead.Email == null || lead.LeadSource == null){ 
+            lead.Phone.addError('Preencha o Telefone'); 
+            lead.Email.addError('Preencha o Email'); 
+            lead.LeadSource.addError('Preencha a origem do Lead'); 
+        }if(lead.LeadSource == 'Web'){ 
+            lead.Status = 'Hot'; 
+        } 
+    } 
+}
+
+//----------- Trigger Lead 2 ------------//
+trigger LeadAtv on Lead (After Insert) {  
+if(trigger.isAfter && trigger.isInsert){
+           List<Task> lstTask = New List<Task>();            
+            for(Lead lead :trigger.new){
+                if(lead.AnnualRevenue >= 50000){
+                    Task task = new Task(
+                    subject = 'Verificar se o cadastro está completo associado ao Lead',
+                        WhoID = lead.id
+                   );
+                    lstTask.add(Task);
+                }
+            }
+            if(lstTask.size()>0) {
+                Insert lstTask;
+            }   
+        }
+    }
+//----------- Trigger Lead 3 ------------//
+trigger LeadAtv on Lead (before insert, after insert, before update){
+    //os ifs dos eventos de ativação
+    //before_insert
+    if(Trigger.isBefore && Trigger.isInsert){
+        for(Lead lead: Trigger.new){
+            if(String.isBlank(lead.Phone) && String.isBlank(lead.MobilePhone)){
+                lead.addError('Deve ter pelo menos um contato (telefone ou celular) cadastrado');
+            } 
+            
+            if(String.isBlank(lead.rating)){
+                lead.Rating = 'Cold';
+            }
+            
+            if(lead.AnnualRevenue < 0){
+                lead.AnnualRevenue.addError('Não pode ser negativo');
+            }
+            
+            if(lead.AnnualRevenue == null){
+                lead.AnnualRevenue = 0;
+            }
+            
+        }
+    }
+    //----------- Trigger Lead 4 ------------//
+    //after_insert
+    if(Trigger.isAfter && Trigger.isInsert){
+        List<Task> listTask = new List<Task>();
+		
+        for(Lead lead : Trigger.new){
+            if(lead.status == 'Open - Not Contacted'){
+                Task t = new Task(
+                	Subject = 'Entrar em contato nos próximos dias',
+                    WhoId = lead.Id
+                );
+                
+                listTask.add(t);
+            }
+        }
+        
+        insert listTask;
+    }
+//----------- Trigger Lead 5 ------------//
+    //before_update
+    if(Trigger.isBefore && Trigger.isUpdate){
+        for(Lead lead: Trigger.new){
+            if(Trigger.oldMap.get(lead.id).status == 'Open - Not Contacted' && (lead.status == 'Closed - Converted' || lead.status == 'Closed - Not Converted' )){
+                lead.addError('Você não pode FECHAR um lead como CONVERTIDO ou NÃO CONVERTIDO, sem entrar em contato primeiro');
+            }
+        }
+    }  
+    
+ }
+//----------- Trigger Lead 6 ------------//
+trigger LeadAtv on Lead (before insert) {
+    if(trigger.isBefore){
+        for(Lead lead : trigger.new){
+            if(lead.AnnualRevenue >= 0 && lead.AnnualRevenue < 1000 && trigger.isInsert){
+               lead.Rating = 'COLD';  
+           }if(lead.AnnualRevenue >= 10000 && lead.AnnualRevenue < 100000 && trigger.isInsert){
+               lead.Rating = 'Warm';  
+        }  if(lead.AnnualRevenue >= 100000 && trigger.isInsert){
+               lead.Rating = 'Hot'; 
+        }
+}
+        }
+}
+//----------- Trigger Lead 6 ------------//
+trigger LeadAtv on Lead (before insert) {
+    for(Lead lead : Trigger.new){
+        if(String.isBlank(lead.Fax)){
+            lead.Fax = 'Sem fax';
+        }
+        if(String.isBlank(lead.WebSite)){
+            lead.WebSite = 'Site Indefinido';
+                }
+        if(lead.AnnualRevenue == null){
+            lead.AnnualRevenue = 0;
+        		}
+          	 }	
+           }
+//----------- Trigger Lead 6 ------------//
+trigger LeadAtv on Lead (before insert) {
+    for(Lead lead: Trigger.new){
+        lead.Fax = '(XX) XXXXX-XXXX';
+        lead.Website = 'www.example.com';
+        lead.AnnualRevenue = 0;
+    }
+}
