@@ -1,3 +1,4 @@
+//---------------- Trigger Opportunity --------------//
 trigger OppBoss on Opportunity (before insert, after insert, before update, after update) {
  
        if (Trigger.isBefore && Trigger.isInsert) {
@@ -63,4 +64,124 @@ trigger OppBoss on Opportunity (before insert, after insert, before update, afte
     }
    }
  } 
+}
+
+
+//-------------- Classe de Teste -------------//
+
+
+@isTest
+public class OppBossTeste {
+    @isTest
+public static void test(){
+        Opportunity opportunity = new Opportunity(
+        Name = 'Nova oportunidade',
+        CloseDate = date.today(),
+        StageName  = 'Closed Won',
+        LeadSource = 'Web',
+        Amount = 700000
+        );
+    insert opportunity;
+    Opportunity Recovery = [Select Id, Description, StageName From Opportunity];
+    System.assertEquals('Essa oportunidade deverá ter uma atenção especial, alta chance de fechamento!!', recovery.Description);
+	System.assertEquals('Qualification', recovery.StageName);
+}@isTest
+public static void tes1t(){
+        Opportunity opportunity = new Opportunity(
+        Name = 'Nova oportunidade',
+        CloseDate = date.today(),
+        StageName  = 'Closed Won',
+        LeadSource = 'Web',
+        Amount = 700000
+        );
+    insert opportunity;
+    opportunity.LeadSource = 'Phone Inquiry';
+  try{ 
+        update opportunity;
+    }catch(DMLException e){
+            System.assert(e.getMessage().contains('Após a definição de uma origem do lead, não é possível modifica-la.'));
+    }
+}	
+    
+@isTest
+public static void tesat(){
+        Opportunity opportunity = new Opportunity(
+        Name = 'Nova oportunidade',
+        CloseDate = date.today(),
+        StageName  = 'Perception Analysis',
+        LeadSource = 'Web',
+        Amount = 10
+        );
+    insert opportunity;
+    opportunity.StageName = 'Negotiation/Review';
+     try{ 
+        update opportunity;
+    }catch(DMLException e){
+            System.assert(e.getMessage().contains('A oportunidade é muito baixa, não permitido entrar nessa fase'));
+    }
+}@isTest
+public static void test2(){
+        Opportunity opportunity = new Opportunity(
+        Name = 'Nova oportunidade',
+        CloseDate = date.today(),
+        StageName  = 'Closed Won',
+        LeadSource = 'Web',
+        Amount = 700000
+        );
+    insert opportunity;
+    opportunity.StageName = 'Negotiation/Review';
+    try{ 
+        update opportunity;
+    }catch(DMLException e){
+            System.assert(e.getMessage().contains('Num vai dar não!!'));
+    }
+    
+}@isTest 
+	public static void TaskLead(){       
+        Account account = new Account(
+    	Name = 'Pedro Vip',
+    	Vip1__c = True,
+    	CNPJ__c = '23293616425185'
+        );
+    insert account;
+        Opportunity opportunity = new Opportunity(
+        Name = 'Nova oportunidade',
+        CloseDate = date.today(),
+        StageName  = 'Closed Won',
+        LeadSource = 'Web',
+        Amount = 1000000,
+        AccountId = Account.Id
+        
+        );
+    insert opportunity;
+		
+            Task created = [SELECT WhatId FROM Task WHERE WhatId =: opportunity.Id];
+        system.assertEquals(created.WhatId, opportunity.Id);
+		System.Debug(created.WhatId + ' ' + opportunity.Id);   
+            
+    }@isTest 
+		public static void oppCase(){              
+        Account account = new Account(
+    	Name = 'Pedro Vip',
+    	Vip1__c = True,
+    	CNPJ__c = '23293616425185'
+        );
+        Opportunity opportunity = new Opportunity(
+        Name = 'Nova oportunidade',
+        CloseDate = date.today(),
+        StageName  = 'Negotiation/Review',
+        LeadSource = 'Web',
+        Amount = 1000000
+        
+        );
+        insert opportunity;
+        opportunity.StageName = 'Closed Won';
+        update opportunity;
+        Opportunity recovery =[Select id, accountId from opportunity];
+        Case[] cases = [SELECT Id, AccountId FROM case WHERE AccountId =: recovery.AccountId];
+            for (Case caso : cases) {
+        system.assertEquals(caso.AccountId, recovery.AccountId);
+		System.Debug(caso.AccountId + ' ' + recovery.AccountId);         
+}
+}
 }
