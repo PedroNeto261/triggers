@@ -1,0 +1,66 @@
+trigger OppBoss on Opportunity (before insert, after insert, before update, after update) {
+ 
+       if (Trigger.isBefore && Trigger.isInsert) {
+        for (Opportunity op : Trigger.new) {
+            if (op.LeadSource == 'Web' || op.LeadSource == 'Purchased List') {
+                op.Description = 'Essa oportunidade deverá ter uma atenção especial, alta chance de fechamento!!';
+                op.StageName = 'Qualification';
+            }
+        }
+    }    
+     if (Trigger.isBefore && Trigger.isUpdate) {
+        for (Opportunity op : Trigger.new) {
+            if (trigger.oldMap.get(op.id).LeadSource != trigger.newMap.get(op.id).LeadSource) {
+                op.addError('Após a definição de uma origem do lead, não é possível modifica-la.');
+            }
+        }
+    }
+    
+    if  (Trigger.isBefore && Trigger.isUpdate) { 
+        for (Opportunity op : Trigger.new) {
+            if ((op.Amount < 10000) && (trigger.newMap.get(op.id).StageName == 'Perception Analysis' || trigger.newMap.get(op.id).StageName == 'Negotiation/Review')) {
+                op.addError('A oportunidade é muito baixa, não permitido entrar nessa fase');
+            }                 
+            
+        }
+    }
+        if (Trigger.isBefore && Trigger.isUpdate) {
+        for (Opportunity op : Trigger.new) {
+            if ((trigger.oldMap.get(op.id).StageName == 'Closed Won' || trigger.oldMap.get(op.id).StageName == 'Closed Lost') && trigger.newMap.get(op.id).StageName != trigger.oldMap.get(op.id).StageName) {
+                op.addError('Num vai dar não!!');
+            } 
+}
+  }
+    if (Trigger.isAfter && Trigger.isInsert) {
+        for (Opportunity op : Trigger.new) {
+            if (op.Amount > 100000){
+                List<Task> lst = New List<Task>();
+                Task task = new Task(
+                ActivityDate = date.today() + 10,
+                subject = 'Tentar fechar essa o quanto antes!!!!!',
+                    WhatID = op.id,
+                    Priority = 'High',
+                    Status = 'Not Started'
+                );
+               lst.add(Task);
+        if(lst.size()>0) {
+                Insert lst;
+    		}
+      }     
+	} 
+}
+     if (Trigger.isAfter && Trigger.isUpdate) {
+        for (Opportunity op : Trigger.new) {
+            if (trigger.oldMap.get(op.id).StageName == 'Negotiation/Review' && op.Amount > 250000 && trigger.newMap.get(op.id).StageName == 'Closed Won') {
+             List<Case> caso = new List<Case>();
+                Case c = new Case(Subject = 'Novo procedimento de instalação', Status = 'New', Reason = 'Instalation', Type = 'Structural', AccountId = op.AccountId);
+            caso.add(c);     
+           
+        
+            if(!caso.isEmpty()) {
+                insert caso;
+            }
+    }
+   }
+ } 
+}
